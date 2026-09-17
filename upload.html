@@ -16,43 +16,52 @@
   </header>
 
   <main class="container">
-    <form id="upload-form" class="form-card">
-      <div class="form-group">
-        <label for="title">Título da Mídia</label>
-        <input type="text" id="title" required placeholder="Ex: Vídeo de demonstração">
-      </div>
+<form id="upload-form" class="form-card">
+  <div class="form-group">
+    <label for="title">Título da Mídia</label>
+    <input type="text" id="title" required placeholder="Ex: Vídeo Engraçado">
+  </div>
 
-      <div class="form-group">
-        <label for="media-type">Tipo de Mídia</label>
-        <select id="media-type" required>
-          <option value="image">Imagem / GIF</option>
-          <option value="video">Vídeo</option>
-        </select>
-      </div>
+  <div class="form-group">
+    <label for="media-type">Tipo de Mídia</label>
+    <select id="media-type" required>
+      <option value="image">Imagem / GIF</option>
+      <option value="video">Vídeo</option>
+    </select>
+  </div>
 
-      <div class="form-group">
-        <label for="source-type">Origem do Conteúdo</label>
-        <select id="source-type" required>
-          <option value="url">Link Externo (URL)</option>
-          <option value="drive">Arquivo Local (Enviar para o Google Drive)</option>
-        </select>
-      </div> 
-      
-      <!-- Campo para URL externa -->
-      <div class="form-group" id="url-input-group">
-        <label for="media-url">URL da Mídia</label>
-        <input type="url" id="media-url" required placeholder="https://exemplo.com/imagem.png">
-      </div>
-   
-      <!-- Campo para arquivo local (Google Drive) -->
-      <div class="form-group hidden" id="file-input-group">
-        <label for="media-file">Selecione o Arquivo</label>
-        <input type="file" id="media-file" accept="image/*,video/*">
-        <p class="help-text">O envio ao Google Drive será configurado em breve.</p>
-      </div>
+  <div class="form-group">
+    <label for="source-type">Origem do Conteúdo</label>
+    <select id="source-type" required>
+      <option value="url">Link Externo (URL)</option>
+      <option value="drive">Arquivo Local (Google Drive)</option>
+    </select>
+  </div>
 
-      <button type="submit" class="btn-submit">Salvar e Visualizar</button>
-    </form>
+  <div class="form-group" id="url-input-group">
+    <label for="media-url">URL da Mídia (Link Direto do Arquivo)</label>
+    <input type="url" id="media-url" required placeholder="https://exemplo.com/video.mp4">
+  </div>
+
+  <!-- Novo Campo: Link da Fonte Original -->
+  <div class="form-group">
+    <label for="original-source">Link do Site Oficial / Fonte Original</label>
+    <input type="url" id="original-source" placeholder="https://instagram.com/p/... ou site oficial">
+  </div>
+
+  <!-- Novo Campo: Tags -->
+  <div class="form-group">
+    <label for="media-tags">Tags (separadas por vírgula)</label>
+    <input type="text" id="media-tags" placeholder="Ex: cachorro, filmes, engraçado">
+  </div>
+
+  <div class="form-group hidden" id="file-input-group">
+    <label for="media-file">Selecione o Arquivo</label>
+    <input type="file" id="media-file" accept="image/*,video/*">
+  </div>
+
+  <button type="submit" class="btn-submit">Salvar Mídia</button>
+</form>
   </main>
 
   <script src="js/upload.js"></script>
