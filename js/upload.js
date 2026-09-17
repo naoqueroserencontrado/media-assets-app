@@ -2,26 +2,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const sourceTypeSelect = document.getElementById('source-type');
   const urlGroup = document.getElementById('url-input-group');
   const fileGroup = document.getElementById('file-input-group');
+  const mediaUrlInput = document.getElementById('media-url');
+  const mediaFileInput = document.getElementById('media-file');
   const uploadForm = document.getElementById('upload-form');
 
-  // Alterna a exibição entre URL externa e Arquivo do Drive
   sourceTypeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'url') {
       urlGroup.classList.remove('hidden');
       fileGroup.classList.add('hidden');
+      mediaUrlInput.required = true;
+      mediaFileInput.required = false;
     } else {
       urlGroup.classList.add('hidden');
       fileGroup.classList.remove('hidden');
+      mediaUrlInput.required = false;
+      mediaFileInput.required = true;
     }
   });
 
-  // Manipulação do envio
   uploadForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const title = document.getElementById('title').value;
+    const title = document.getElementById('title').value.trim();
     const type = document.getElementById('media-type').value;
     const sourceType = sourceTypeSelect.value;
+
+    if (!title) {
+      alert('Por favor, informe um título.');
+      return;
+    }
 
     let mediaItem = {
       id: Date.now(),
@@ -32,16 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (sourceType === 'url') {
-      const url = document.getElementById('media-url').value;
+      const url = mediaUrlInput.value.trim();
+      if (!url) {
+        alert('Por favor, informe uma URL válida.');
+        return;
+      }
       mediaItem.url = url;
 
-      // Salva no localStorage para testes locais imediatos
       saveMediaItem(mediaItem);
       window.location.href = 'index.html';
 
     } else if (sourceType === 'drive') {
-      // Estrutura reservada para a API do Google Drive
-      alert('A funcionalidade de upload direto para o Google Drive está preparada no formulário e será conectada à API do Google na próxima fase.');
+      alert('A integração com o Google Drive será configurada na próxima etapa.');
     }
   });
 
