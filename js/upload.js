@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const uploadForm = document.getElementById('upload-form');
   const sourceTypeSelect = document.getElementById('source-type');
   const urlGroup = document.getElementById('url-input-group');
   const fileGroup = document.getElementById('file-input-group');
   const mediaUrlInput = document.getElementById('media-url');
   const mediaFileInput = document.getElementById('media-file');
-  const uploadForm = document.getElementById('upload-form');
 
   sourceTypeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'url') {
@@ -26,33 +26,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('title').value.trim();
     const type = document.getElementById('media-type').value;
     const sourceType = sourceTypeSelect.value;
+    const originalSource = document.getElementById('original-source').value.trim();
+    const rawTags = document.getElementById('media-tags').value;
 
-    if (!title) {
-      alert('Por favor, informe um título.');
-      return;
-    }
+    // Processa a string de tags em um array de palavras sem espaços extras
+    const tags = rawTags.split(',')
+                        .map(tag => tag.trim().toLowerCase())
+                        .filter(tag => tag.length > 0);
 
     let mediaItem = {
       id: Date.now(),
       title: title,
       type: type,
       sourceType: sourceType,
+      originalSourceUrl: originalSource || null,
+      tags: tags,
       createdAt: new Date().toISOString()
     };
 
     if (sourceType === 'url') {
-      const url = mediaUrlInput.value.trim();
-      if (!url) {
-        alert('Por favor, informe uma URL válida.');
-        return;
-      }
-      mediaItem.url = url;
-
+      mediaItem.url = mediaUrlInput.value.trim();
       saveMediaItem(mediaItem);
       window.location.href = 'index.html';
-
-    } else if (sourceType === 'drive') {
-      alert('A integração com o Google Drive será configurada na próxima etapa.');
+    } else {
+      alert('A integração com o Google Drive processará os arquivos nesta modalidade.');
     }
   });
 
