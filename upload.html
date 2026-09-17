@@ -1,69 +1,131 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adicionar Mídia</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-  <header>
-    <h1>Adicionar Nova Mídia</h1>
-    <nav>
-      <a href="index.html">Galeria</a>
-      <a href="upload.html" class="active">Adicionar Mídia</a>
-    </nav>
-  </header>
+// Configurações do seu Repositório
+const GITHUB_CONFIG = {
+  owner: 'naoqueroserencontrado',
+  repo: 'media-assets-app',
+  path: 'data/media.json'
+};
 
-  <main class="container">
-<form id="upload-form" class="form-card">
-  <div class="form-group">
-    <label for="title">Título da Mídia</label>
-    <input type="text" id="title" required placeholder="Ex: Vídeo Engraçado">
-  </div>
+document.addEventListener('DOMContentLoaded', () => {
+  const uploadForm = document.getElementById('upload-form');
+  const sourceTypeSelect = document.getElementById('source-type');
+  const urlGroup = document.getElementById('url-input-group');
+  const fileGroup = document.getElementById('file-input-group');
+  const mediaUrlInput = document.getElementById('media-url');
+  const mediaFileInput = document.getElementById('media-file');
 
-  <div class="form-group">
-    <label for="media-type">Tipo de Mídia</label>
-    <select id="media-type" required>
-      <option value="image">Imagem / GIF</option>
-      <option value="video">Vídeo</option>
-    </select>
-  </div>
+  sourceTypeSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'url') {
+      urlGroup.classList.remove('hidden');
+      fileGroup.classList.add('hidden');
+      mediaUrlInput.required = true;
+      mediaFileInput.required = false;
+    } else {
+      urlGroup.classList.add('hidden');
+      fileGroup.classList.remove('hidden');
+      mediaUrlInput.required = false;
+      mediaFileInput.required = true;
+    }
+  });
 
-  <div class="form-group">
-    <label for="source-type">Origem do Conteúdo</label>
-    <select id="source-type" required>
-      <option value="url">Link Externo (URL)</option>
-      <option value="drive">Arquivo Local (Google Drive)</option>
-    </select>
-  </div>
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  <div class="form-group" id="url-input-group">
-    <label for="media-url">URL da Mídia (Link Direto do Arquivo)</label>
-    <input type="url" id="media-url" required placeholder="https://exemplo.com/video.mp4">
-  </div>
+    const submitBtn = uploadForm.querySelector('.btn-submit');
+    submitBtn.textContent = 'Salvando no repositório...';
+    submitBtn.disabled = true;
 
-  <!-- Novo Campo: Link da Fonte Original -->
-  <div class="form-group">
-    <label for="original-source">Link do Site Oficial / Fonte Original</label>
-    <input type="url" id="original-source" placeholder="https://instagram.com/p/... ou site oficial">
-  </div>
+    const title = document.getElementById('title').value.trim();
+    const type = document.getElementById('media-type').value;
+    const sourceType = sourceTypeSelect.value;
+    const originalSource = document.getElementById('original-source')?.value.trim() || null;
+    const rawTags = document.getElementById('media-tags')?.value || '';
 
-  <!-- Novo Campo: Tags -->
-  <div class="form-group">
-    <label for="media-tags">Tags (separadas por vírgula)</label>
-    <input type="text" id="media-tags" placeholder="Ex: cachorro, filmes, engraçado">
-  </div>
+    const tags = rawTags.split(',')
+                        .map(t => t.trim().toLowerCase())
+                        .filter(t => t.length > 0);
 
-  <div class="form-group hidden" id="file-input-group">
-    <label for="media-file">Selecione o Arquivo</label>
-    <input type="file" id="media-file" accept="image/*,video/*">
-  </div>
+    const newItem = {
+      id: Date.now(),
+      title: title,
+      type: type,
+      sourceType: sourceType,
+      url: mediaUrlInput.value.trim(),
+      originalSourceUrl: originalSource,
+      tags: tags,
+      createdAt: new Date().toISOString()
+    };
 
-  <button type="submit" class="btn-submit">Salvar Mídia</button>
-</form>
-  </main>
+    try {
+      await saveToGitHubRepository(newItem);
+      alert('Mídia salva com sucesso e fixada no repositório!');
+      window.location.href = 'index.html';
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar no GitHub: ' + error.message);
+      submitBtn.textContent = 'Salvar Mídia';
+      submitBtn.disabled = false;
+    }
+  });
+});
 
-  <script src="js/upload.js"></script>
-</body>
-</html>
+// Função que faz o Fetch e o Update direto no GitHub via REST API
+async function saveToGitHubRepository(newItem) {
+  // 1. Obtém o token do localStorage ou solicita ao usuário
+  let token = localStorage.getItem('github_pat');
+
+  if (!token) {
+    token = prompt('Insira seu Personal Access Token do GitHub para autorizar o salvamento:');
+    if (!token) {
+      throw new Error('O Token de Acesso é obrigatório para salvar.');
+    }
+    token = token.trim();
+    localStorage.setItem('github_pat', token);
+  }
+
+  const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`;
+  const headers = {
+    'Authorization': `token ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+
+  // 2. Busca o arquivo atual no GitHub para obter a lista existente e o "sha"
+  const getResponse = await fetch(url, { headers });
+  
+  if (getResponse.status === 401) {
+    localStorage.removeItem('github_pat');
+    throw new Error('Token inválido ou expirado. Tente novamente.');
+  }
+
+  if (!getResponse.ok) {
+    throw new Error('Não foi possível acessar o arquivo no repositório.');
+  }
+
+  const fileData = await getResponse.json();
+  
+  // Decodifica o conteúdo Base64 retornado pelo GitHub
+  const currentContentText = decodeURIComponent(escape(atob(fileData.content)));
+  const currentList = JSON.parse(currentContentText || '[]');
+
+  // 3. Adiciona o novo item à lista
+  currentList.push(newItem);
+
+  // 4. Re-codifica o JSON atualizado em Base64
+  const updatedContentText = JSON.stringify(currentList, null, 2);
+  const updatedContentBase64 = btoa(unescape(encodeURIComponent(updatedContentText)));
+
+  // 5. Faz a requisição PUT para atualizar o arquivo fixo no repositório
+  const putResponse = await fetch(url, {
+    method: 'PUT',
+    headers: headers,
+    body: JSON.stringify({
+      message: `Adiciona nova mídia: ${newItem.title}`,
+      content: updatedContentBase64,
+      sha: fileData.sha
+    })
+  });
+
+  if (!putResponse.ok) {
+    throw new Error('Falha ao atualizar os dados no GitHub.');
+  }
+}
